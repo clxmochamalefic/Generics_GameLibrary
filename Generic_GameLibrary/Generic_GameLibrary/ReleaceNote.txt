@@ -1,0 +1,15 @@
+*-*-*-* Generic_GameLibrary Releace Note *-*-*-*
+
+* 現在の仕様：
+OpenGLとglut3.7を使用しており、PointSpriteによる2D描画を実現
+アルファテスト対応
+
+*-*-*-* バージョン情報 *-*-*-*
+2011/06/01
+	Ver.1.0.0.alpha 2D基礎完成
+	
+* Ver.1.0.0.alphaの主な仕様：
+
+2Dのpng画像のみ描画可能
+OpenGLとglut3.7を使用しており、PointSpriteによる2D描画を実現
+アルファテスト対応
