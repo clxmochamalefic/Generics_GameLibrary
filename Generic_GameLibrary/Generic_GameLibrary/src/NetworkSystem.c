@@ -186,7 +186,7 @@ GglBoolean GglNetwork_HostServerWaitGuestClientOnce(GglObject _object)
 		return GglFalse;
 	}
 
-	GglNetworkList_AddElement(toClient);
+	GglSocketList_AddElement(toClient);
 
 	//LeaveCriticalSection(&nModule->criticalSection);
 

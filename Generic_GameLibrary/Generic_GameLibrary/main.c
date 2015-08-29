@@ -1,5 +1,5 @@
-#include "Generic_GameLibrary.h"
-#include "src\\Player.h"
+#include "src\\Generic_GameLibrary.h"
+#include "me\\Player.h"
 #include <stdlib.h>
 
 #define GGL_USE_DEBUG

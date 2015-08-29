@@ -81,7 +81,7 @@ static void GglSystem_Shutdown(void)
 	GglClock waitTime = clock();
 
 	GglLinkList_Shutdown();
-	GglNetworkList_Shutdown();
+	GglSocketList_Shutdown();
 	GglNetwork_Shutdown();
 	GglMultiThread_Shutdown();
 	GglSystem_UnLoadContent();

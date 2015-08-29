@@ -1,9 +1,9 @@
 #include "Generic_GameLibrary.h"
 #include "png.h"
-#include <cv.h>
-#include <highgui.h>
+//#include <cv.h>
+//#include <highgui.h>
 #pragma warning(disable:4996)
-//
+
 ///***************************************************************************
 // * GglImage_AssembleElements関数
 // * uintの画像情報とpngInfo情報をGglImage構造体に統一して出力します
@@ -115,6 +115,7 @@ static void GglImage_LoadPngException(png_structp png_ptr, png_const_charp msg)
 #endif
 }
 
+
 /**
  * GglImage_LoadPng関数
  * PNGイメージを読み込む
@@ -124,23 +125,24 @@ static void GglImage_LoadPngException(png_structp png_ptr, png_const_charp msg)
  *
  * @return	関数の成功失敗
 */
+
 GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 {
-	FILE*			fp;
-	png_structp		pPng;
-	png_infop		pInfo;
-	png_byte		pbSig[8];
-	GglImage*		pImage;
-	double			gamma;
-	unsigned int	i=0, j=0;
-	int				rb;
-	GglUByte**		rows;
-	int				imgid;
-	png_bytep		test;
-	png_color_16p	w;
-	png_colorp		plte;
-	int				pltemax;
-	int				bgplte;
+	FILE*			fp			= NULL;
+	png_structp		pPng		= NULL;
+	png_infop		pInfo		= NULL;
+	png_byte		pbSig[8]	= { 0, 0, 0, 0, 0, 0, 0, 0 };
+	GglImage*		pImage		= NULL;
+	double			gamma		= 0.0;
+	unsigned int	i	= 0, j	= 0;
+	int				rb			= 0;
+	GglUByte**		rows		= NULL;
+	static int		imgid		= 0;
+	png_bytep		test		= NULL;
+	png_color_16p	w			= NULL;
+	png_colorp		plte		= NULL;
+	int				pltemax		= 0;
+	int				bgplte		= 0;
 
 	// 引数チェック
 	if(!in_fileName)
@@ -148,19 +150,22 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 		return NULL;
 	}
 
-	// 1. シグネチャ読み込み
+	// pngファイル読み込み
 	fp = fopen(in_fileName, GGL_FILE_READ_BINALY);
 	
 	if(fp == NULL)
 	{
+		GglDebug_PrintExceptionLine();
 		return NULL;
 	}
 
+	// 1. シグネチャ読み込み
 	fread(pbSig, 1, 8, fp);
 
 	if(png_sig_cmp(pbSig, 0, 8))
 	{
 		out_pImage = NULL;
+		GglDebug_PrintExceptionLine();
 		return NULL;
 	}
 
@@ -169,9 +174,11 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 									NULL,
 									(png_error_ptr)GglImage_LoadPngException,
 									(png_error_ptr)NULL);
+	// png作成失敗の場合はNULLを返す
 	if(!pPng)
 	{
 		out_pImage = NULL;
+		GglDebug_PrintExceptionLine();
 		return NULL;
 	}
 
@@ -181,15 +188,18 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 	{
 		png_destroy_read_struct(&pPng, NULL, NULL);
 		out_pImage = NULL;
+		GglDebug_PrintExceptionLine();
 		return NULL;
 	}
 
+	// Imageインスタンスを作成
 	pImage = (GglImage*)GglMemory_New(sizeof(GglImage));
 	pImage->id = 0;
 
 	// 3. ファイルポインタのセット	
 	png_init_io(pPng, fp);
 
+	// シグネチャサイズをlibpngに伝達
 	png_set_sig_bytes(pPng, 8);
 
 	// 5. データ読み込み
@@ -197,14 +207,22 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 	png_read_info(pPng, pInfo);
 
 	// 画像から幅と高さ情報を取得
-	png_get_IHDR(pPng, pInfo, &pImage->size.x, &pImage->size.y, &pImage->depth, &pImage->colorType, NULL, NULL, NULL);
+	png_get_IHDR(pPng
+				,pInfo
+				,&pImage->size.x
+				,&pImage->size.y
+				,&pImage->depth
+				,&pImage->colorType
+				,NULL
+				,NULL
+				,NULL);
 
+	// 画像の深度バッファが8bit以下なら、バッファサイズを広げる 
 	if(pImage->depth < 8)
 	{
 		png_set_expand(pPng);
-	}
-
-	if(pImage->depth == 16)
+	}// 画像の深度バッファが16bitちょうどであれば、libpngに当該の画像の深度バッファが16bitであることを伝える
+	else if(pImage->depth == 16)
 	{
 		png_set_strip_16(pPng);
 	}
@@ -230,18 +248,28 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 			{
 				png_get_bKGD(pPng, pInfo, &w);
 			}
+			else
+			{
+				png_set_add_alpha(pPng, 0xff, PNG_FILLER_AFTER);
+			}
 			break;
 
 		case PNG_COLOR_TYPE_PALETTE:
 			
+			png_get_PLTE(pPng, pInfo, &pImage->palette, (int*)&pImage->maxPalette);
+			png_set_palette_to_rgb(pPng);
+
 			if(png_get_valid(pPng, pInfo, PNG_INFO_tRNS))
 			{
 				png_get_tRNS(pPng, pInfo, &test, &bgplte, &w);
-				png_get_PLTE(pPng, pInfo, &plte, &pltemax);
-				png_set_palette_to_rgb(pPng);
+				png_set_tRNS_to_alpha(pPng);
+			}
+			else if (!(pImage->colorType & PNG_COLOR_MASK_ALPHA))
+			{
 				png_set_add_alpha(pPng, 0xff, PNG_FILLER_AFTER);
 			}
-			else if(png_get_valid(pPng, pInfo, PNG_INFO_bKGD))
+
+			if(png_get_valid(pPng, pInfo, PNG_INFO_bKGD))
 			{
 				png_get_bKGD(pPng, pInfo, &w);
 				png_set_palette_to_rgb(pPng);
@@ -263,7 +291,7 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 	pImage->channles		= png_get_channels(pPng, pInfo);
 
 	// 画像幅と高さの2次元配列を作成
-	rb		= png_get_rowbytes(pPng, pInfo);
+	rb				= png_get_rowbytes(pPng, pInfo);
 	pImage->rows	= (GglUByte*)GglMemory_New(sizeof(GglUByte*) * pImage->size.y * rb);
 	
 	for(i=0; i<pImage->size.y; i++)
@@ -285,9 +313,9 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 	{
 		for(i=0; i<pImage->size.x * pImage->size.y; i++)
 		{
-			if(	pImage->rows[i*4]	== w->red &&
-				pImage->rows[i*4+1] == w->green &&
-				pImage->rows[i*4+2] == w->blue)
+			if(	pImage->rows[i*4]	== test[0] &&
+				pImage->rows[i*4+1] == test[1] &&
+				pImage->rows[i*4+2] == test[2])
 			{
 				pImage->rows[i*4+3] = 0x00;
 			}
@@ -314,13 +342,14 @@ GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 3, pImage->size.x, pImage->size.y, GL_RGBA, GL_UNSIGNED_BYTE, pImage->rows);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, pImage->size.x, pImage->size.y, GL_RGBA, GL_UNSIGNED_BYTE, pImage->rows);
 	glDisable(GL_TEXTURE_2D);
 
 	pImage->id = imgid++;
 
 	return pImage;
 }
+
 
 //GglImage* GglImage_LoadPng(GglImage* out_pImage, GglString in_fileName)
 //{

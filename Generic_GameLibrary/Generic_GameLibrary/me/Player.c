@@ -11,7 +11,7 @@ void Player_Constractor(void)
 
 	player->m_model		= GglModel_LoadModel("Debug\\cube2.x", NULL);
 	player->m_planeMod	= GglModel_LoadModel("Debug\\hikouki_tes01.x", NULL);
-	player->m_image		= GglImage_LoadPng(NULL, "c.png");
+	player->m_image		= GglImage_LoadPng(NULL, "i2.png");
 	player->m_Life		= 10;
 
 	GglVector3_SetInitialize(player->m_vMove);
@@ -143,7 +143,11 @@ void Player_Update(GglLink* _this, GglObject _obj)
 		player->m_vRot.z += 360;
 	}
 
-	player->m_vPos2d.x+=2;
+	//
+	// ‰æ‘œ‚ª•Ï‚È“®‚«•û‚ð‚·‚é‚Ì‚Í2ŽŸŒ³•`‰æ‚ÌÝ’è‚ª‚¨‚©‚µ‚¢ glPerspective‚Æ‚©B
+	//
+
+	//player->m_vPos2d.x+=2;
 
 	//glMatrixMode(GL_PROJECTION);
 	//gluLookAt(player->m_vPos.x, player->m_vPos.y, player->m_vPos.z, player->m_vPos.x, player->m_vPos.y-1.0, player->m_vPos.z, 0, 1, 0);
@@ -168,7 +172,7 @@ void Player_Draw(GglObject* _obj)
 
 	//glDisable(GL_BLEND);
 
-	GglGraphic2d_DrawSprite(player->m_image, &player->m_image->size ,&rect, &player->m_vPos2d, NULL);
+	GglGraphic2d_DrawSprite(player->m_image, &player->m_vPos2d, &player->m_image->size, NULL);
 
 	return ;
 }

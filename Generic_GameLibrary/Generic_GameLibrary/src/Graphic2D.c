@@ -44,8 +44,78 @@
 //}
 //
 //
+
+/**
+* GglGraphic2d_DrawSpriteFull関数
+* 2D板ポリゴンに描画する際、テクスチャデータのすべてを描画します
+*
+* @param in_pImage	type: GglImage*		イメージ本体
+* @param in_pVec	type: GglVector3f*	描画位置
+* @param in_pSize	type: GglVector2i*	ポリゴンサイズ
+* @param in_pColor	type: GglColor4*	描画色(テクスチャカラーに重ねます)
+*/
+void GglGraphic2d_DrawSprite(GglImage* in_pImage, GglVector3f* in_pVec, GglVector2i* in_pSize, GglColor4* in_pColor)
+{
+	// NULLチェック
+	if (in_pImage == NULL || in_pVec == NULL || in_pSize == NULL)
+	{
+		#ifdef _DEBUG	
+		GglDebug_PrintExceptionLine();
+		#endif
+		return;
+	}
+	/*
+	 glEnable(GL_BLEND);
+ glEnable( GL_TEXTURE_2D );
+ glBindTexture( GL_TEXTURE_2D, texture );
+ glAlphaFunc(GL_GREATER, alpha);
+ glEnable(GL_ALPHA_TEST);//アルファテスト開始
+ glBegin(GL_POLYGON);
+ glTexCoord2f(0.0f, 1.0f); glVertex2d(10 , 230);//左下
+ glTexCoord2f(0.0f, 0.0f); glVertex2d(10 ,  10);//左上
+ glTexCoord2f(1.0f, 0.0f); glVertex2d( 310 ,  10);//右上
+ glTexCoord2f(1.0f, 1.0f); glVertex2d( 310 , 230);//右下
+ glEnd();
+ glDisable(GL_ALPHA_TEST);//アルファテスト終了
+ glDisable( GL_TEXTURE_2D );
+ glDisable(GL_BLEND);
+	*/
+	GglGraphic_DrawSpriteBegin();						// 描画開始
+
+	glEnable(GL_BLEND);									// アルファブレンドを有効
+	glBindTexture(GL_TEXTURE_2D, in_pImage->id);			// 描画するテクスチャを設定
+	glEnable(GL_TEXTURE_2D);
+	glAlphaFunc(GL_ALWAYS, 0.5);						// アルファテスト設定
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	// アルファブレンド設定
+	glEnable(GL_ALPHA_TEST);							// アルファテストを有効
+
+//	glPushMatrix();
+//	glLoadIdentity();
+//	gluPerspective(GglGraphic_PERS_FOVY, (double)GglGraphic_PERS_WIDTH / GglGraphic_PERS_HEIGHT, GglGraphic_PERS_ZNEAR, GglGraphic_PERS_ZFAR);
+//	gluLookAt(0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+	glBegin(GL_QUADS);
+
+	glTexCoord2d(0.0, 0.0);		glVertex2d(in_pVec->x,					in_pVec->y);
+	glTexCoord2d(1.0, 0.0);		glVertex2d(in_pVec->x + in_pSize->x,	in_pVec->y);
+	glTexCoord2d(1.0, 1.0);		glVertex2d(in_pVec->x + in_pSize->x,	in_pVec->y + in_pSize->y);
+	glTexCoord2d(0.0, 1.0);		glVertex2d(in_pVec->x,					in_pVec->y + in_pSize->y);
+
+	glEnd();
+
+//	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_BLEND);
+	glDisable(GL_ALPHA_TEST);
+
+	GglGraphic_DrawSpriteEnd();
+
+	return;
+}
+
 /*****************************************
- * GglGraphic2d_DrawSprite関数
+ * GglGraphic2d_DrawSpriteScraps関数
  * 2Dポリゴン及びテクスチャを描画します
  *
  * 戻り値：なし
@@ -55,14 +125,14 @@
  * 3.GglVector3f*	in_pVec		//描画位置
  * 4.GglColor4*	in_pColor	//描画色
 */
-void GglGraphic2d_DrawSprite(GglImage* in_pImage, GglVector2i* in_pSize, GglRectangle* in_pRect, GglVector3f* in_pVec, GglColor4* in_pColor)
+void GglGraphic2d_DrawSpriteScraps(GglImage* in_pImage, GglVector2i* in_pSize, GglRectangle* in_pRect, GglVector3f* in_pVec, GglColor4* in_pColor)
 {
 	GglGraphic_DrawSpriteBegin();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glAlphaFunc(GL_ALWAYS, 0.5);
-	glEnable(GL_ALPHA_TEST);
-	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	// アルファブレンド設定
+	//glAlphaFunc(GL_ALWAYS, 0.5);						// アルファテスト設定
+	glEnable(GL_ALPHA_TEST);							// アルファテストを有効
+	glEnable(GL_BLEND);									// アルファブレンドを有効
 
 	glEnable(GL_TEXTURE_2D);
 	glPushMatrix();
